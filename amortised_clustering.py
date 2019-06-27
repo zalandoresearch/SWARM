@@ -39,9 +39,9 @@ def get_options():
                         help='type of set-equivariant model to be used')
 
     parser.add_argument('-n_hidden', type=int, default=128,
-                        help='number of hdden units inside the model')
+                        help='number of hidden units inside the model')
     parser.add_argument('-n_layers', type=int, default=1,
-                        help='numebr of layers for mult-layered models')
+                        help='number of layers for multi-layered models')
     parser.add_argument('-n_iter',   type=int, default=5,
                         help='number of iterations to be done in Swarm layers')
 
@@ -56,7 +56,7 @@ def get_options():
     parser.add_argument('-dropout',  type=float, default=0.0,
                         help='dropout rate')
     parser.add_argument('-tasks',    type=int, default=10000,
-                        help='number of tasks to be ceated (traing and validation together)')
+                        help='number of tasks to be created (training and validation together)')
 
 
     parser.add_argument('-bs', type=int,    default=100,
@@ -78,7 +78,7 @@ def get_options():
                         help='learning rate')
 
     parser.add_argument('-no_cuda', action='store_true',
-                        help='dont use CUDA even if it is availabe')
+                        help='dont use CUDA even if it is available')
 
 
     parser.add_argument('-dry_run', action='store_true',
@@ -88,7 +88,7 @@ def get_options():
                         help='log all output to stdout instead of modelname/log')
 
     parser.add_argument('-run', type=int, default=0,
-                        help='additinal run id to be appended to the model name,'
+                        help='additional run id to be appended to the model name,'
                         'has no function otherwise')
 
 
@@ -100,9 +100,9 @@ def get_options():
     opt.cuda = not opt.no_cuda
 
     opt.n_in = 2
-    opt.n_out = 10 # 2d, 10 clusters, other dimensions not yet supportrd
+    opt.n_out = 10 # 2d, 10 clusters, other dimensions not yet supported
 
-    # remove '-resume' from argument list, becaus it shall not become part of the model name
+    # remove '-resume' from argument list, because it shall not become part of the model name
     try:
         i = sys.argv.index('-resume')
         sys.argv.remove(sys.argv[i+1])
@@ -249,7 +249,7 @@ def train( model, optimizer, traces, opt, dl_train, dl_val, name=None):
             loss.backward()
             optimizer.step()
 
-            # a dictionary of values and metrics that will be logged by the Traces opbject
+            # a dictionary of values and metrics that will be logged by the Traces object
             logs = {'loss': loss.item()}
 
             time_is_up = time.time() > t_start + 60 * wc + t_no_training  # or i>=250
@@ -318,10 +318,10 @@ def train( model, optimizer, traces, opt, dl_train, dl_val, name=None):
             # this can take some time, so we don't do it all to often
             t_no_training = t_no_training - time.time()
 
-            # this does the actual magick
+            # this does the actual magic
             traces.on_epoch_end(e)
 
-            # reset the update counter and recor how much time we have spent here,
+            # reset the update counter and record how much time we have spent here,
             # this will not account for the training time budget
             t_update = time.time()
             t_no_training = t_no_training + time.time()
@@ -378,7 +378,7 @@ def main() :
         for param_group in optimizer.param_groups:
             param_group['lr'] = opt.lr
 
-    # create a tracing opject, that records training and validation losses and other metrics and records 13 individual
+    # create a tracing object, that records training and validation losses and other metrics and records 13 individual
     # weights of every model parameter tensor
     # every now and then it plots learning curves, weight traces and model samples to
     # modelname/[metrics.png,weights.png,samples.png] respectively
@@ -393,4 +393,3 @@ def main() :
 
 if __name__== "__main__":
     main()
-
