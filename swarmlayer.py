@@ -8,11 +8,11 @@ class SwarmConvLSTMCell(nn.Module):
     def __init__(self, n_in, n_out, n_dim=2, pooling='CAUSAL'):
         """
         Create a SwarmConvLSTMCell. We use 1-by-1 convolutions to carry on entities individually. The entities are aligned
-        in a 1d or 2d spatial structure. Note that, unless pooling is 'CAUSAL', this setup is indeed permutation-eqivariant.
+        in a 1d or 2d spatial structure. Note that, unless pooling is 'CAUSAL', this setup is indeed permutation-equivariant.
         Populations of different sizes (different number of entities) can be grouped in one batch were missing entities
         will be padded and masked out.
         :param n_in: input dimension of the entities
-        :param n_out: output dimesion of the entities
+        :param n_out: output dimension of the entities
         :param n_dim: dimension of the spatial arrangement of the entities (1 or 2)
         :param pooling: pooling method 'MEAN' or 'CAUSAL'
         """
@@ -127,9 +127,9 @@ class SwarmLayer(nn.Module):
         Create a SwarmLayer that repeatedly executes a SwarmCell for a given number of iterations
         :param n_in: number of dimensions of input entities
         :param n_out: number of dimensions of output entities
-        :param n_hidden: number of dimensions of entities in intermediate iteratiions
+        :param n_hidden: number of dimensions of entities in intermediate iterations
         :param n_iter: number of iterations
-        :param n_dim: spatial entitiy layout (1 or 2)-d
+        :param n_dim: spatial entity layout (1 or 2)-d
         :param dropout: dropout rate (applied to h, not c, between iterations)
         :param pooling: to be used in the SWARM cell 'CAUSAL' or 'MEAN'
         :param channel_first: entity dimension is dimension 1, right after batch dimension (default), otherwise it is last
@@ -141,7 +141,7 @@ class SwarmLayer(nn.Module):
 
         self.n_dim = n_dim
         if n_dim==2:
-            # an output feed forward layer after. Becaus channel_first is default, is is implemented by a 1-by-1 conv.
+            # an output feed forward layer after. Because channel_first is default, is is implemented by a 1-by-1 conv.
             self.ffwd = nn.Conv2d(2 * n_hidden, n_out, (1,1), bias=True)
         elif n_dim==1:
             self.ffwd = nn.Conv1d(2 * n_hidden, n_out, 1, bias=True)
@@ -195,6 +195,5 @@ class SwarmLayer(nn.Module):
             elif self.n_dim==2:
                 y = y.transpose(2,3).transpose(1,2)
         return y
-
 
 

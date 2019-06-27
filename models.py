@@ -16,7 +16,7 @@ nonlinearities['lrelu'] = nn.LeakyReLU()
 class MaskedSequential(nn.Module):
     """
     Build a sequential module out of modules that take a mask parameter in their forward() method. Known modules that
-    don't take a mask argument (e.g. non-linearities) can be seemlessly included.
+    don't take a mask argument (e.g. non-linearities) can be seamlessly included.
     """
     def __init__(self, *mods):
 

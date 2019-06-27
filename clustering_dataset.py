@@ -50,7 +50,7 @@ def collate_fn(batch, device=None):
     padded to the largest common length. A mask array indicated the padding (mask==0) vs. valid entities (mask==1)
     :param batch: list of tasks
     :param device: pytorch device
-    :return: entity coordinades, cluster ID's, mask array
+    :return: entity coordinates, cluster ID's, mask array
     """
     n_ent = max([x.shape[0] for x, _, _, _ in batch])
 

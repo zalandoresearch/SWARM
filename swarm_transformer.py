@@ -37,14 +37,14 @@ class SwarmTransformer(nn.Module):
                  learnable_location_features = False,
                  ):
         """
-        Create a SwarmTransformer module for generative modelling of images
+        Create a SwarmTransformer module for generative modeling of images
         :param cells: a list of SwarmConvLSTMCell
         :param n_emb: size of positional embeddings and class conditional embeddings
-        :param C: number of immage channels
+        :param C: number of image channels
         :param H: image height in pixels
         :param W: image width in pixels
         :param K: number of classes (for class conditional generation)
-        :param learnable_location_features: if True, learn the locationfeatures otherwise use sinosoids
+        :param learnable_location_features: if True, learn the location features otherwise use sinusoids
         """
         super().__init__()
 
@@ -141,7 +141,7 @@ class SwarmTransformer(nn.Module):
 
         logits = self.cells(X_in)
         # note, W and C dimensions are flattened, logits are (N,n_out,H,W*C)
-        # reshapeing them back now
+        # reshaping them back now
         logits = logits.view( -1, 256, H,W,C)
         loss = self.ce_loss(logits, X_out)
 
@@ -314,9 +314,9 @@ def main():
 
 
     parser.add_argument('-n_hidden', type=int, default=128,
-                        help='number of hdden units inside the model')
+                        help='number of hidden units inside the model')
     parser.add_argument('-n_layers', type=int, default=1,
-                        help='numebr of layers for mult-layered models')
+                        help='number of layers for mult-layered models')
     parser.add_argument('-n_iter',   type=int, default=5,
                         help='number of iterations to be done in Swarm layers')
 
@@ -334,10 +334,10 @@ def main():
                         help='learning rate')
 
     parser.add_argument('-no_cuda', action='store_true',
-                        help='dont use CUDA even if it is availabe')
+                        help='dont use CUDA even if it is available')
 
     parser.add_argument('-name', type=str, default=None,
-                        help='you can provide a model name that will be parsed into cmd line optopns')
+                        help='you can provide a model name that will be parsed into cmd line options')
 
     parser.add_argument('-dry_run', action='store_true',
                         help='just print out the model name and exit')
@@ -351,7 +351,7 @@ def main():
                         help='backtracking learning rate discount factor')
 
     parser.add_argument('-cond', action='store_true',
-                        help='do class conditional modelling')
+                        help='do class conditional modeling')
 
     parser.add_argument('-resume', type=str, default=None,
                         help='resume model from modelname/best.pkl')
@@ -404,8 +404,8 @@ def main():
 
 
     # in case the desired batch size does not fit into CUDA memory
-    # do batch iteration. Try in a loop the largerst batch size nad batch_iter=1 first.
-    # Decrease batch_size (increase batch_iter) by common factors until ther is a moddel that does not throw an
+    # do batch iteration. Try in a loop the largest batch size nad batch_iter=1 first.
+    # Decrease batch_size (increase batch_iter) by common factors until there is a model that does not throw an
     # out-of-memory error
     for batch_iter in factors(opt.bs):
 
@@ -452,7 +452,7 @@ def main():
                 for param_group in optimizer.param_groups:
                     param_group['lr'] = opt.lr
 
-            # create a tracing opject, that records training and validation losses and other metrics and records 13 individual
+            # create a tracing object, that records training and validation losses and other metrics and records 13 individual
             # weights of every model parameter tensor
             # every now and then it plots learning curves, weight traces and model samples to
             # modelname/[metrics.png,weights.png,samples.png] respectively
@@ -560,10 +560,10 @@ def main():
                     # this can take some time, so we don't do it all to often
                     t_no_training = t_no_training - time.time()
 
-                    # this does the actual magick
+                    # this does the actual magic
                     traces.on_epoch_end(e)
 
-                    # reset the update counter and recor how much time we have spent here,
+                    # reset the update counter and record how much time we have spent here,
                     # this will not account for the training time budget
                     t_update = time.time()
                     t_no_training = t_no_training + time.time()
@@ -572,7 +572,7 @@ def main():
                 if time_is_up:
                     break
 
-            print("{}s spent prparing traces and samples".format(t_no_training))
+            print("{}s spent preparing traces and samples".format(t_no_training))
             os.rename(name_part, name)
 
             break # the loop over batch iterations
