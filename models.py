@@ -60,7 +60,10 @@ class SetLinear(nn.Module):
             else:
                 pool = torch.max(glob+torch.log(mask), dim=1, keepdim=True)[0]
         else:
-            pool = glob.mean(dim=1, keepdim=True)
+            if self.pooling=='MEAN':
+                pool = glob.mean(dim=1, keepdim=True)
+            else:
+                pool = torch.max(glob, dim=1, keepdim=True)[0]
 
         return local + pool
 
