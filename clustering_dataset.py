@@ -165,7 +165,7 @@ def hungarian_cross_entropy(logits, labels, mask, C):
     M = torch.matmul(labels.transpose(1, 2), logits) / torch.sum(mask.float(), 1).view(-1, 1, 1)
 
     for m in M:
-        i, j = linear_sum_assignment(m.data.cpu().numpy())
+        i, j = linear_sum_assignment(-m.data.cpu().numpy())
         m_max.append(m[i,j].sum())
 
         idx.append( torch.tensor([i,j]))
