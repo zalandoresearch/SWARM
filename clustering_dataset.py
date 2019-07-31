@@ -3,6 +3,7 @@ import math
 import numpy as np
 import torch
 from scipy.stats import invwishart, multivariate_normal, multinomial
+from scipy.optimize import linear_sum_assignment
 
 
 def create_dataset(n_dim, n_clust, n_tasks, n_entities, seed=None):
@@ -154,6 +155,27 @@ def greedy_cross_entropy(logits, labels, mask, C):
 
 
 
+
+def hungarian_cross_entropy(logits, labels, mask, C):
+    # logits (N,E,C)
+
+    m_max = []
+    idx = []
+    logits = logits *mask.float().unsqueeze(-1)
+    M = torch.matmul(labels.transpose(1, 2), logits) / torch.sum(mask.float(), 1).view(-1, 1, 1)
+
+    for m in M:
+        i, j = linear_sum_assignment(m.data.cpu().numpy())
+        m_max.append(m[i,j].sum())
+
+        idx.append( torch.tensor([i,j]))
+
+    m_max = torch.stack(m_max,0)
+    idx = torch.stack(idx, 0)
+    return m_max, idx
+
+
+greedy_cross_entropy = hungarian_cross_entropy
 
 
 
