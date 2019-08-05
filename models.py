@@ -49,15 +49,15 @@ class SetLinear(nn.Module):
         # x is (N, n_samp, n_in)
         N, n_samp, n_in = x.size()
 
-        mask = mask.unsqueeze(2).float()
         local = self.ffwd1(x)
         glob = self.ffwd2(x)
         if mask is not None:
+            mask = mask.unsqueeze(2).float()
             pool = (glob * mask).sum(dim=1, keepdim=True) / mask.sum(dim=1, keepdim=True)
         else:
             pool = glob.mean(dim=1, keepdim=True)
 
-        return local + glob
+        return local + pool
 
 
 
