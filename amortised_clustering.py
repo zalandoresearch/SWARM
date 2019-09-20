@@ -245,7 +245,7 @@ def train( model, optimizer, traces, opt, dl_train, dl_val, name=None):
             loss, _ = greedy_cross_entropy(logits, idx, mask, 10)
             loss = -loss.mean()
 
-            print(i, "%.4f" % loss.item(), end="\r")
+            print(i, "%.4f" % loss.item(), end='\r')
 
             loss.backward()
             optimizer.step()

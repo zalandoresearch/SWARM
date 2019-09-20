@@ -153,6 +153,7 @@ class SwarmLayer(nn.Module):
         else:
             raise ValueError("dim {} not supported".format(n_dim))
 
+
         if dropout>0:
             self.drop = nn.Dropout2d(dropout)
         else:
