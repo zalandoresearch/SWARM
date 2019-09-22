@@ -35,8 +35,9 @@ def get_options():
                                                         'SetLinear',
                                                         'SetTransformer',
                                                         'LSTM',
-                                                        'LSTMS'],
-                        help='type of set-equivariant model to be used')
+                                                        'LSTMS',
+                                                        'SetLinearMax'],
+                        help = 'type of set-equivariant model to be used')
 
     parser.add_argument('-n_hidden', type=int, default=128,
                         help='number of hidden units inside the model')

@@ -39,9 +39,11 @@ class SetLinear(nn.Module):
 
     def __init__(self,
                  n_in,
-                 n_out):
+                 n_out,
+                 pooling='MEAN'):
         super().__init__()
 
+        self.pooling = pooling
         self.ffwd1 = nn.Linear(n_in, n_out)
         self.ffwd2 = nn.Linear(n_in, n_out)
 
@@ -53,7 +55,10 @@ class SetLinear(nn.Module):
         glob = self.ffwd2(x)
         if mask is not None:
             mask = mask.unsqueeze(2).float()
-            pool = (glob * mask).sum(dim=1, keepdim=True) / mask.sum(dim=1, keepdim=True)
+            if self.pooling=='MEAN':
+                pool = (glob * mask).sum(dim=1, keepdim=True) / mask.sum(dim=1, keepdim=True)
+            else:
+                pool = torch.max(glob+torch.log(mask), dim=1, keepdim=True)[0]
         else:
             pool = glob.mean(dim=1, keepdim=True)
 
@@ -121,22 +126,25 @@ def create_model( opt):
 
             model = MaskedSequential(*layers)
 
-    elif opt.type == 'SetLinear':
+    elif opt.type == 'SetLinear' or opt.type == 'SetLinearMax':
 
         # uses opt. ...
         # n_layers
         # n_in
         # n_out
         # n_hidden
+        pooling = 'MEAN' if opt.type == 'SetLinear' else 'MAX'
         layers = []
         n_out_last = opt.n_in
         for i in range(opt.n_layers - 1):
             layers.append(SetLinear(n_in=n_out_last,
-                                    n_out=opt.n_hidden) )
+                                    n_out=opt.n_hidden,
+                                    pooling=pooling) )
             n_out_last = opt.n_hidden
             layers.append(nonlinearity)
         layers.append(SetLinear(n_in=n_out_last,
-                                n_out=opt.n_out) )
+                                n_out=opt.n_out,
+                                pooling=pooling) )
 
         model = MaskedSequential(*layers)
 
