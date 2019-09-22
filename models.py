@@ -105,7 +105,7 @@ def create_model( opt):
                                 n_hidden = opt.n_hidden,
                                 n_iter   = opt.n_iter,
                                 dropout  = opt.dropout,
-                                n_dim=1, pooling='MEAN', channel_first=False)
+                                n_dim=1, pooling='MEAN', channel_first=False, cache=True)
         else:
             assert opt.n_layers>1
 
@@ -117,7 +117,7 @@ def create_model( opt):
                                           n_hidden = opt.n_hidden,
                                           n_iter   = opt.n_iter,
                                           dropout=opt.dropout,
-                                          n_dim=1, pooling='MEAN', channel_first=False) )
+                                          n_dim=1, pooling='MEAN', channel_first=False, cache=True) )
                 layers.append( nonlinearity)
                 n_out_last = opt.n_hidden
             layers.append( SwarmLayer(n_in     = n_out_last,
@@ -125,7 +125,7 @@ def create_model( opt):
                                       n_hidden = opt.n_hidden,
                                       n_iter   = opt.n_iter,
                                       dropout=opt.dropout,
-                                      n_dim=1, pooling='MEAN', channel_first=False) )
+                                      n_dim=1, pooling='MEAN', channel_first=False, cache=True) )
 
             model = MaskedSequential(*layers)
 
