@@ -175,7 +175,6 @@ def create_model( opt):
 
         model = MaskedSequential(*layers)
 
-
     elif opt.type == 'LSTM' or opt.type == 'LSTMS':
 
         # uses opt. ...
