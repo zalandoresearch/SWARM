@@ -35,8 +35,9 @@ def get_options():
                                                         'SetLinear',
                                                         'SetTransformer',
                                                         'LSTM',
-                                                        'LSTMS'],
-                        help='type of set-equivariant model to be used')
+                                                        'LSTMS',
+                                                        'SetLinearMax'],
+                        help = 'type of set-equivariant model to be used')
 
     parser.add_argument('-n_hidden', type=int, default=128,
                         help='number of hidden units inside the model')
@@ -244,7 +245,7 @@ def train( model, optimizer, traces, opt, dl_train, dl_val, name=None):
             loss, _ = greedy_cross_entropy(logits, idx, mask, 10)
             loss = -loss.mean()
 
-            print(i, "%.4f" % loss.item(), end="\r")
+            print(i, "%.4f" % loss.item(), end='\r')
 
             loss.backward()
             optimizer.step()

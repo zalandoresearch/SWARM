@@ -39,9 +39,11 @@ class SetLinear(nn.Module):
 
     def __init__(self,
                  n_in,
-                 n_out):
+                 n_out,
+                 pooling='MEAN'):
         super().__init__()
 
+        self.pooling = pooling
         self.ffwd1 = nn.Linear(n_in, n_out)
         self.ffwd2 = nn.Linear(n_in, n_out)
 
@@ -53,9 +55,15 @@ class SetLinear(nn.Module):
         glob = self.ffwd2(x)
         if mask is not None:
             mask = mask.unsqueeze(2).float()
-            pool = (glob * mask).sum(dim=1, keepdim=True) / mask.sum(dim=1, keepdim=True)
+            if self.pooling=='MEAN':
+                pool = (glob * mask).sum(dim=1, keepdim=True) / mask.sum(dim=1, keepdim=True)
+            else:
+                pool = torch.max(glob+torch.log(mask), dim=1, keepdim=True)[0]
         else:
-            pool = glob.mean(dim=1, keepdim=True)
+            if self.pooling=='MEAN':
+                pool = glob.mean(dim=1, keepdim=True)
+            else:
+                pool = torch.max(glob, dim=1, keepdim=True)[0]
 
         return local + pool
 
@@ -97,7 +105,7 @@ def create_model( opt):
                                 n_hidden = opt.n_hidden,
                                 n_iter   = opt.n_iter,
                                 dropout  = opt.dropout,
-                                n_dim=1, pooling='MEAN', channel_first=False)
+                                n_dim=1, pooling='MEAN', channel_first=False, cache=True)
         else:
             assert opt.n_layers>1
 
@@ -109,7 +117,7 @@ def create_model( opt):
                                           n_hidden = opt.n_hidden,
                                           n_iter   = opt.n_iter,
                                           dropout=opt.dropout,
-                                          n_dim=1, pooling='MEAN', channel_first=False) )
+                                          n_dim=1, pooling='MEAN', channel_first=False, cache=True) )
                 layers.append( nonlinearity)
                 n_out_last = opt.n_hidden
             layers.append( SwarmLayer(n_in     = n_out_last,
@@ -117,26 +125,29 @@ def create_model( opt):
                                       n_hidden = opt.n_hidden,
                                       n_iter   = opt.n_iter,
                                       dropout=opt.dropout,
-                                      n_dim=1, pooling='MEAN', channel_first=False) )
+                                      n_dim=1, pooling='MEAN', channel_first=False, cache=True) )
 
             model = MaskedSequential(*layers)
 
-    elif opt.type == 'SetLinear':
+    elif opt.type == 'SetLinear' or opt.type == 'SetLinearMax':
 
         # uses opt. ...
         # n_layers
         # n_in
         # n_out
         # n_hidden
+        pooling = 'MEAN' if opt.type == 'SetLinear' else 'MAX'
         layers = []
         n_out_last = opt.n_in
         for i in range(opt.n_layers - 1):
             layers.append(SetLinear(n_in=n_out_last,
-                                    n_out=opt.n_hidden) )
+                                    n_out=opt.n_hidden,
+                                    pooling=pooling) )
             n_out_last = opt.n_hidden
             layers.append(nonlinearity)
         layers.append(SetLinear(n_in=n_out_last,
-                                n_out=opt.n_out) )
+                                n_out=opt.n_out,
+                                pooling=pooling) )
 
         model = MaskedSequential(*layers)
 
@@ -163,7 +174,6 @@ def create_model( opt):
         layers.append(nn.Linear(opt.n_hidden, opt.n_out))
 
         model = MaskedSequential(*layers)
-
 
     elif opt.type == 'LSTM' or opt.type == 'LSTMS':
 

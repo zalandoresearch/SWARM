@@ -3,9 +3,10 @@ import math
 import numpy as np
 import torch
 from scipy.stats import invwishart, multivariate_normal, multinomial
+from scipy.optimize import linear_sum_assignment
 
 
-def create_dataset(n_dim, n_clust, n_tasks, n_entities, seed=None):
+def create_dataset(n_dim, n_clust, n_tasks, n_entities, seed=None, pi_samp=None, Si_samp=None, mu_samp=None):
     """
     Create the amortised clustering dataset
     :param n_dim: number of dimensions
@@ -29,11 +30,24 @@ def create_dataset(n_dim, n_clust, n_tasks, n_entities, seed=None):
 
         n_ent = np.random.randint(*n_entities)
 
-        for j, n in enumerate(*multinomial.rvs(n_ent, np.ones(n_clust_) / n_clust_, 1)):
-            Si[j] = invwishart.rvs(4, 0.05 * np.eye(n_dim))
-            mu[j] = np.random.randn(n_dim)
-            x.append(multivariate_normal.rvs(mu[j], Si[j], size=n).astype(np.float32))
-            idx.append(j * np.ones(n, dtype=np.long))
+        if pi_samp is not None:
+            pi = pi_samp(n_clust_)
+        else:
+            pi = np.ones(n_clust_)/n_clust_
+
+        for j, n in enumerate(*multinomial.rvs(n_ent, pi, 1)):
+            if Si_samp is not None:
+                Si[j] = Si_samp(n_dim)
+            else:
+                Si[j] = invwishart.rvs(4, 0.05 * np.eye(n_dim))
+
+            if mu_samp is not None:
+                mu[j] = mu_samp(n_dim)
+            else:
+                mu[j] = np.random.randn(n_dim)
+            if n>0:
+                x.append(multivariate_normal.rvs(mu[j], Si[j], size=[n]).astype(np.float32).reshape(n,-1))
+                idx.append(j * np.ones(n, dtype=np.long))
 
         j = np.random.permutation(n_ent)
         x = np.concatenate(x, 0)[j]
@@ -155,14 +169,39 @@ def greedy_cross_entropy(logits, labels, mask, C):
 
 
 
+def hungarian_cross_entropy(logits, labels, mask, C):
+    # logits (N,E,C)
+
+    m_max = []
+    idx = []
+    logits = logits *mask.float().unsqueeze(-1)
+    M = torch.matmul(labels.transpose(1, 2), logits) / torch.sum(mask.float(), 1).view(-1, 1, 1)
+
+    for m in M:
+        i, j = linear_sum_assignment(-m.data.cpu().numpy())
+        m_max.append(m[i,j].sum())
+
+        idx.append( torch.tensor([i,j]))
+
+    m_max = torch.stack(m_max,0)
+    idx = torch.stack(idx, 0)
+    return m_max, idx
+
+
+greedy_cross_entropy = hungarian_cross_entropy
+#greedy_cross_entropy = greedy_cross_entropy_
+
 
 
 from torch.utils.data import DataLoader
 
 
-def create_data_loders(n_tasks, seed=0, device=None):
+def create_data_loders(n_tasks, ds=None, seed=0, device=None):
 
-    ds = create_dataset( n_dim=2, n_clust=(3,11), n_tasks=n_tasks, n_entities=(100,1001), seed=seed)
+    if ds is None:
+        ds = create_dataset( n_dim=2, n_clust=(3,11), n_tasks=n_tasks, n_entities=(100,1001), seed=seed)
+
+    assert n_tasks == len(ds)
 
     split = (n_tasks*9)//10
     ds_train = ds[:split]

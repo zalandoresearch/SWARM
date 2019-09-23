@@ -195,6 +195,7 @@ class PoolingMultiheadAttention(nn.Module):
         Returns:
             a float tensor with shape [b, k, d].
         """
+        b = z.size(0)
         s = self.seed_vectors.unsqueeze(0).repeat([b, 1, 1])  # shape [b, k, d]
         return self.mab(s, z)
         # note that in the original paper

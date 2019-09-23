@@ -5,7 +5,7 @@ import torch.nn as nn
 
 class SwarmConvLSTMCell(nn.Module):
 
-    def __init__(self, n_in, n_out, n_dim=2, pooling='CAUSAL'):
+    def __init__(self, n_in, n_out, n_dim=2, pooling='CAUSAL', cache=False):
         """
         Create a SwarmConvLSTMCell. We use 1-by-1 convolutions to carry on entities individually. The entities are aligned
         in a 1d or 2d spatial structure. Note that, unless pooling is 'CAUSAL', this setup is indeed permutation-equivariant.
@@ -40,6 +40,9 @@ class SwarmConvLSTMCell(nn.Module):
 
         self.pooling = pooling
 
+
+        self.cache = cache
+        self.x_cache = None
 
     def pool_function(self, h, mask):
         """
@@ -90,13 +93,14 @@ class SwarmConvLSTMCell(nn.Module):
         assert C==self.n_in
 
         if hc is None:
-            h = c = torch.zeros( (N,self.n_out,*x_sz[2:]), dtype=x.dtype, device=x.device)
-            pool = 0
+            c = torch.zeros( (N,self.n_out,*x_sz[2:]), dtype=x.dtype, device=x.device)
+            tmp = self.Wih(x)  # (N,4*n_out, H,W)
+            self.x_cache = tmp
         else:
             h,c = hc
             pool = self.Whp( self.pool_function(h, mask))
+            tmp = (self.x_cache if self.cache else self.Wih(x)) + self.Whh(h)  + pool  # (N,4*n_out, H,W)
 
-        tmp = self.Wih(x) + self.Whh(h)  + pool  # (N,4*n_out, H,W)
         tmp = tmp.view(N,4,self.n_out,*x_sz[2:])
 
         ig = torch.sigmoid( tmp[:,0])
@@ -122,7 +126,8 @@ class SwarmLayer(nn.Module):
                  n_dim=2,
                  dropout=0.0,
                  pooling='CAUSAL',
-                 channel_first=True):
+                 channel_first=True,
+                 cache=False):
         """
         Create a SwarmLayer that repeatedly executes a SwarmCell for a given number of iterations
         :param n_in: number of dimensions of input entities
@@ -137,7 +142,7 @@ class SwarmLayer(nn.Module):
         super().__init__()
 
         self.n_iter = n_iter
-        self.cell = SwarmConvLSTMCell(n_in, n_hidden, n_dim=n_dim, pooling=pooling)
+        self.cell = SwarmConvLSTMCell(n_in, n_hidden, n_dim=n_dim, pooling=pooling, cache=cache)
 
         self.n_dim = n_dim
         if n_dim==2:
@@ -148,6 +153,7 @@ class SwarmLayer(nn.Module):
         else:
             raise ValueError("dim {} not supported".format(n_dim))
 
+
         if dropout>0:
             self.drop = nn.Dropout2d(dropout)
         else:
@@ -156,7 +162,7 @@ class SwarmLayer(nn.Module):
         self.channel_first = channel_first
 
 
-    def forward(self, x, mask=None):
+    def forward(self, x, mask=None, cache=False):
         """
         forward process the SwarmLayer
         :param x: input
